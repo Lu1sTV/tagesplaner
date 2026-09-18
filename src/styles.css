@@ -1,0 +1,290 @@
+:root {
+  --bg: #f6f6f4;
+  --card: #ffffff;
+  --text: #1c1c1a;
+  --muted: #86867e;
+  --line: #e5e5e0;
+  --accent: #3b5bdb;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17171a;
+    --card: #1f1f23;
+    --text: #ecece8;
+    --muted: #8a8a92;
+    --line: #2e2e34;
+    --accent: #7b93f5;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+header h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
+header p { margin: 4px 0 0; color: var(--muted); }
+
+.lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.list {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.list-head h2 { margin: 0; font-size: 17px; }
+.count { color: var(--muted); font-size: 13px; }
+
+form { display: flex; gap: 8px; margin-bottom: 14px; }
+
+input[type='text'], form input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+form input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+form button {
+  width: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+}
+form button:hover { border-color: var(--accent); color: var(--accent); }
+
+ul { list-style: none; margin: 0; padding: 0; }
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: grab;
+}
+li:active { cursor: grabbing; }
+li.dragging {
+  opacity: 0.4;
+  background: var(--bg);
+  border-radius: 6px;
+}
+
+.grip {
+  color: var(--line);
+  font-size: 13px;
+  line-height: 1;
+  user-select: none;
+}
+li:hover .grip { color: var(--muted); }
+li:last-child { border-bottom: none; }
+
+li label {
+  flex: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+li input[type='checkbox'] { accent-color: var(--accent); width: 16px; height: 16px; }
+li.done span { color: var(--muted); text-decoration: line-through; }
+
+.actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
+li:hover .actions, li:focus-within .actions { opacity: 1; }
+
+.actions button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.actions button:hover { color: var(--accent); background: var(--bg); }
+
+.empty { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
+
+.clear {
+  margin-top: 12px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  padding: 0;
+  cursor: pointer;
+}
+.clear:hover { color: var(--accent); }
+
+.tip {
+  margin: 22px 2px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Kopfzeilen-Navigation */
+nav { display: flex; gap: 4px; }
+nav button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+nav button:hover { color: var(--text); background: var(--card); }
+nav button.active {
+  color: var(--text);
+  background: var(--card);
+  border-color: var(--line);
+}
+
+/* Login und Ladezustand */
+.center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.login {
+  display: block;
+  width: 280px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+.login h1 { margin: 0 0 16px; font-size: 20px; }
+.login input {
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.login button[type='submit'] {
+  width: 100%;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.login button[type='submit']:disabled { opacity: 0.5; cursor: default; }
+
+.error {
+  color: #c0392b;
+  font-size: 14px;
+  margin: 10px 0 0;
+}
+@media (prefers-color-scheme: dark) {
+  .error { color: #ff8a7a; }
+}
+.error button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Inline-Bearbeitung */
+.edit {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+/* Rueckblick */
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.history section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+}
+.history h2 { font-size: 15px; font-weight: 600; }
+.history li { cursor: default; color: var(--muted); }
+.tick { color: var(--accent); font-size: 13px; }
+
+.login p { margin: 0 0 12px; }
+.login code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.login button[type='button'] {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.login button[type='button']:hover { border-color: var(--accent); color: var(--accent); }

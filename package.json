@@ -1,0 +1,27 @@
+{
+  "name": "tagesplaner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:ui": "vite",
+    "dev:server": "TODO_PASSWORD=dev node --watch server/index.mjs",
+    "build": "tsc -b && vite build",
+    "start": "node server/index.mjs",
+    "test": "node src/reorder.test.mjs && node server/api.test.mjs"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
