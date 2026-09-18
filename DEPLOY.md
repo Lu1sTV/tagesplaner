@@ -1,11 +1,10 @@
 # Tagesplaner auf Proxmox (LXC)
 
-Ziel: ein kleiner Debian-Container, in dem der Tagesplaner als systemd-Service läuft.
-Kein Docker, keine Datenbank-Installation, **kein `npm install` auf dem Server** – der
-Server-Teil benutzt ausschließlich eingebaute Node-Module.
+Ein kleiner Debian-Container, der das Repo klont, baut und als systemd-Service laufen
+lässt. Kein Docker, keine Datenbank-Installation, kein Reverse-Proxy nötig.
 
-Du brauchst dafür kein Community-Script: ein blanker Debian-Container reicht, und die
-Einrichtung darin übernimmt `deploy/install.sh`.
+Du brauchst kein Community-Script – ein blanker Debian-Container reicht, die Einrichtung
+darin macht `deploy/install.sh` in einem Befehl.
 
 ---
 
@@ -14,8 +13,8 @@ Einrichtung darin übernimmt `deploy/install.sh`.
 In der Proxmox-Weboberfläche:
 
 1. Links den Storage `local` anklicken → **CT Templates** → **Templates**
-2. In der Liste `debian-13-standard` suchen → **Download**
-   (`debian-12-standard` funktioniert genauso, falls 13 bei dir nicht auftaucht)
+2. `debian-13-standard` suchen → **Download**
+   (`debian-12-standard` geht genauso, falls 13 nicht auftaucht)
 
 ## 2. Container anlegen
 
@@ -24,78 +23,87 @@ Oben rechts **Create CT**:
 | Tab | Einstellung |
 |---|---|
 | General | Hostname `tagesplaner`, **Unprivileged container** angehakt, Root-Passwort setzen |
-| General | **SSH public key**: hier deinen öffentlichen Schlüssel einfügen – siehe Kasten unten |
 | Template | Storage `local`, Template `debian-13-standard` |
-| Disks | 4 GB reichen dicke |
-| CPU | 1 Core |
-| Memory | 512 MB RAM, 512 MB Swap |
-| Network | IPv4 `DHCP` (oder eine feste IP, wenn du eine vergeben willst) |
+| Disks | 4 GB |
+| CPU | 1 Core (2 macht den Build flotter) |
+| Memory | **1024 MB** RAM, 512 MB Swap |
+| Network | IPv4 `DHCP`, oder eine feste IP wenn du eine vergeben willst |
 | DNS | leer lassen = wie der Host |
 
-> **SSH-Key**: auf dem Mac `cat ~/.ssh/id_ed25519.pub` ausgeben und den Inhalt einfügen.
-> Falls du noch keinen hast: `ssh-keygen -t ed25519` (Enter durchdrücken), dann nochmal `cat`.
-> Ohne Key kommst du später nicht per `ssh`/`rsync` rein, und `push.sh` funktioniert nicht.
+> **Warum 1 GB RAM?** Der Container baut das Frontend selbst, und `vite build` braucht
+> dafür kurzzeitig mehr als 512 MB. Im Betrieb liegt die App danach bei ~60 MB, du kannst
+> den RAM also später wieder runterdrehen, wenn du magst.
 
-Danach den Container starten. Die IP steht im Container unter **Summary**, oder per
-Konsole mit `hostname -I`.
+Container starten. Einen SSH-Key brauchst du nicht – die Einrichtung läuft über die
+Proxmox-Konsole. (Wenn du später bequem per `ssh` reinwillst, kannst du den Key beim
+Anlegen im General-Tab eintragen.)
 
 ## 3. Einrichten
 
-Vom Mac aus, mit der IP des Containers:
+Im Container die **Console** öffnen (in Proxmox links den Container anklicken →
+**Console**), als `root` anmelden und einen Befehl ausführen:
 
 ```bash
-cd ~/empiriecom/workspace/tagesplaner
-scp deploy/install.sh root@192.168.1.50:/tmp/
-ssh root@192.168.1.50 bash /tmp/install.sh
+curl -fsSL https://raw.githubusercontent.com/Lu1sTV/tagesplaner/main/deploy/install.sh | bash -s -- MeinPasswort
 ```
 
-Das Skript installiert Node 24, legt den Benutzer `tagesplaner` an, setzt die Zeitzone
-auf `Europe/Berlin`, schreibt den systemd-Service und ein tägliches Backup.
+`MeinPasswort` ist dein späterer Login in der App – such dir was aus. Lässt du es weg,
+generiert das Skript eines und zeigt es am Ende an.
 
-Am Ende gibt es ein **generiertes Passwort** aus – das ist dein Login in der App.
-Wenn du selbst eines setzen willst, gib es direkt mit:
+Das Skript installiert Node 24 und pnpm, klont das Repo nach `/opt/tagesplaner`, baut das
+Frontend, setzt die Zeitzone auf `Europe/Berlin`, legt den systemd-Service an und richtet
+ein tägliches Backup ein. Am Ende steht die URL:
+
+```
+Läuft:  http://192.168.1.50:3000
+```
+
+Das war's – Seite im Browser öffnen, Passwort eingeben, fertig.
+
+## 4. Updates
+
+Du änderst etwas auf dem Mac, committest und pushst:
 
 ```bash
-ssh root@192.168.1.50 bash /tmp/install.sh MeinPasswort
+git add -A && git commit -m "..." && git push
 ```
 
-Später ändern: `/etc/tagesplaner.env` bearbeiten, dann `systemctl restart tagesplaner`.
-
-## 4. App hochladen und starten
+Dann im Container (Console oder per SSH):
 
 ```bash
-deploy/push.sh root@192.168.1.50
+/opt/tagesplaner/deploy/update.sh
 ```
 
-Das baut das Frontend, kopiert `dist/` und `server/` in den Container und startet den
-Service neu. Danach erreichbar unter:
+Das holt den neuen Stand, baut neu, startet den Service und prüft, ob er hochkommt –
+wenn nicht, zeigt es direkt die Logzeilen. Per SSH als Einzeiler:
 
+```bash
+ssh root@192.168.1.50 /opt/tagesplaner/deploy/update.sh
 ```
-http://192.168.1.50:3000
-```
-
-**Updates** laufen später genau gleich: `deploy/push.sh root@<ip>` – ein Befehl.
 
 ---
 
 ## Betrieb
 
 ```bash
-ssh root@192.168.1.50
-
 systemctl status tagesplaner      # läuft er?
 journalctl -u tagesplaner -f      # Logs mitlesen
 systemctl restart tagesplaner     # neustarten
 ```
 
+**Passwort ändern**: `/etc/tagesplaner.env` bearbeiten, dann
+`systemctl restart tagesplaner`. Die Datei wird bei Updates **nicht** angefasst.
+
 **Datenbank**: `/var/lib/tagesplaner/tagesplaner.db` – eine einzelne SQLite-Datei.
+Sie liegt außerhalb von `/opt/tagesplaner`, ein `git reset` beim Update kann ihr also
+nichts tun.
 
 **Backups**: täglich 03:30 nach `/var/lib/tagesplaner/backups/`, 14 Tage Aufbewahrung
-(`/etc/cron.d/tagesplaner-backup`). Das läuft über `VACUUM INTO`, also konsistent im
-laufenden Betrieb – der Service muss dafür nicht angehalten werden. Manuell:
+(`/etc/cron.d/tagesplaner-backup`). Läuft über `VACUUM INTO`, also konsistent im laufenden
+Betrieb – der Service muss dafür nicht angehalten werden. Manuell:
 
 ```bash
-sudo -u tagesplaner TODO_DB=/var/lib/tagesplaner/tagesplaner.db \
+runuser -u tagesplaner -- env TODO_DB=/var/lib/tagesplaner/tagesplaner.db \
   node /opt/tagesplaner/server/backup.mjs /var/lib/tagesplaner/backups
 ```
 
@@ -105,22 +113,21 @@ Eine Kopie auf den Mac holen:
 scp root@192.168.1.50:/var/lib/tagesplaner/backups/*.db ~/Downloads/
 ```
 
-Zusätzlich deckt ein Proxmox-Backup (`vzdump`) des Containers alles mit ab – das ist
-die bequemere Variante, wenn du im Datacenter eh schon einen Backup-Job hast.
+Ein Proxmox-Backup (`vzdump`) des Containers deckt zusätzlich alles mit ab.
 
 ## Zugriff von außerhalb des Heimnetzes
 
-Aktuell hängt die App ohne TLS auf Port 3000 im LAN. Das Passwort geht damit im Klartext
-über das Netz – im eigenen WLAN vertretbar, über das Internet nicht. Wenn du von unterwegs
-drauf willst, nimm **Tailscale** oder WireGuard und lass den Port zu, statt ihn im Router
-freizugeben. Ein Reverse-Proxy mit Let's-Encrypt-Zertifikat wäre die andere Variante.
+Die App hängt ohne TLS auf Port 3000 im LAN. Das Passwort geht damit im Klartext über das
+Netz – im eigenen WLAN vertretbar, über das Internet nicht. Für unterwegs nimm
+**Tailscale** oder WireGuard, statt den Port im Router freizugeben. Die andere Variante
+wäre ein Reverse-Proxy mit Let's-Encrypt-Zertifikat.
 
-Den Port nicht ins Internet portforwarden.
+Port 3000 nicht ins Internet portforwarden.
 
 ## Wenn etwas klemmt
 
 **`install.sh` bricht bei Node ab.** Dann hat NodeSource für die Debian-Version kein
-Paket. Node direkt installieren:
+Paket. Node direkt installieren und das Skript nochmal laufen lassen:
 
 ```bash
 cd /tmp
@@ -129,13 +136,16 @@ tar -xJf node-v24.9.0-linux-x64.tar.xz -C /usr/local --strip-components=1
 node --version
 ```
 
-Danach `bash /tmp/install.sh` nochmal laufen lassen.
+**Build wird „Killed" oder bricht ohne Meldung ab.** Zu wenig RAM. Container auf 1 GB
+hochdrehen (Proxmox → Container → Resources → Memory), neu starten,
+`/opt/tagesplaner/deploy/update.sh`.
 
-**Seite lädt, aber es kommt „Wurde `pnpm build` ausgeführt?"** → `dist/` fehlt im
-Container, also `deploy/push.sh root@<ip>` ausführen.
+**Seite sagt „Wurde `pnpm build` ausgeführt?"** → `dist/` fehlt, also Build ist
+fehlgeschlagen. `/opt/tagesplaner/deploy/update.sh` zeigt den Fehler.
 
-**Tageswechsel passiert zur falschen Zeit.** Zeitzone prüfen: `ssh root@<ip> date`.
-Sie wird über `TZ` in `/etc/tagesplaner.env` gesetzt.
+**Tageswechsel passiert zur falschen Zeit.** `date` im Container prüfen. Die Zeitzone
+kommt aus `TZ` in `/etc/tagesplaner.env`.
 
-**`rsync`/`ssh` fragt nach einem Passwort.** Dann ist der SSH-Key nicht im Container
-angekommen. Nachtragen: `ssh-copy-id root@<ip>`.
+**`install.sh` klont ein privates Repo nicht.** Bei einem privaten Repo braucht der
+Container einen Deploy-Key. Alternative ohne Key: Repo öffentlich lassen (es enthält
+keine Passwörter – die stehen nur in `/etc/tagesplaner.env` auf dem Server).

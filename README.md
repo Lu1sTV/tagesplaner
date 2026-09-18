@@ -51,7 +51,7 @@ Deployment auf einen Proxmox-LXC: siehe [DEPLOY.md](DEPLOY.md).
 | `src/App.tsx` | Komplette Oberfläche |
 | `src/api.ts` | Fetch-Aufrufe gegen die API |
 | `src/order.ts` | Sortier-Logik als pure Funktion (getestet) |
-| `deploy/` | `install.sh` für den LXC, `push.sh` für Updates |
+| `deploy/` | `install.sh` richtet den LXC ein, `update.sh` zieht Updates |
 
 Keine Laufzeit-Dependencies: der Server benutzt nur eingebaute Node-Module
 (`node:http`, `node:sqlite`, `node:crypto`). React und Vite sind reine Build-Zeit.
