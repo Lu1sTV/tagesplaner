@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, Unauthorized, type HistoryDay } from './api'
-import { reorder, type ListId, type State, type Todo } from './order'
+import { ageInDays, reorder, type ListId, type State, type Todo } from './order'
 
 const LISTS: { id: ListId; title: string; hint: string }[] = [
   { id: 'today', title: 'Heute', hint: 'Was heute passieren soll' },
@@ -156,6 +156,20 @@ export default function App() {
         <History onError={setError} />
       )}
     </main>
+  )
+}
+
+/** Zeigt, wie lange ein Todo schon mitgeschleppt wird – ab einem Tag, ab einer Woche deutlicher. */
+function Age({ created }: { created: string }) {
+  const days = ageInDays(created)
+  if (days < 1) return null
+  return (
+    <span
+      className={days >= 7 ? 'age old' : 'age'}
+      title={`Angelegt am ${new Date(created).toLocaleDateString('de-DE')}`}
+    >
+      {days}d
+    </span>
   )
 }
 
@@ -412,6 +426,7 @@ function List({
                 <span onDoubleClick={() => setEditing(todo.id)}>{todo.text}</span>
               </label>
             )}
+            {!todo.done && editing !== todo.id && <Age created={todo.created} />}
             <div className="actions">
               <button
                 onClick={() => onMove(id, todo.id)}

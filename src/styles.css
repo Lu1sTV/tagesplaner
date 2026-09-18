@@ -288,3 +288,28 @@ nav button.active {
   cursor: pointer;
 }
 .login button[type='button']:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Alters-Badge: wie lange haengt das Todo schon herum */
+.age {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 6px;
+  cursor: default;
+}
+.age.old {
+  color: #b9541b;
+  border-color: #e8c4a8;
+  background: #fdf3ec;
+}
+@media (prefers-color-scheme: dark) {
+  .age.old {
+    color: #f0a870;
+    border-color: #5a3c22;
+    background: #2a1e14;
+  }
+}

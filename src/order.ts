@@ -4,6 +4,8 @@ export type Todo = {
   id: string
   text: string
   done: boolean
+  /** ISO-Zeitstempel des Anlegens – Grundlage fuer das Alters-Badge. */
+  created: string
 }
 
 export type State = {
@@ -38,4 +40,15 @@ export function reorder(
   target.splice(found < 0 ? target.length : found, 0, todo)
 
   return from === to ? { ...state, [to]: target } : { ...state, [from]: rest, [to]: target }
+}
+
+/**
+ * Alter in ganzen Kalendertagen. Bewusst kalendertagbasiert und nicht in Stunden:
+ * ein Todo von gestern 23:00 ist heute morgens "1d" alt, nicht "0d".
+ */
+export function ageInDays(created: string, now: Date = new Date()): number {
+  const c = new Date(created)
+  const then = new Date(c.getFullYear(), c.getMonth(), c.getDate()).getTime()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  return Math.round((today - then) / 86_400_000)
 }

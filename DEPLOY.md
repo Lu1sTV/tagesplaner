@@ -44,8 +44,11 @@ Im Container die **Console** öffnen (in Proxmox links den Container anklicken �
 **Console**), als `root` anmelden und einen Befehl ausführen:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Lu1sTV/tagesplaner/main/deploy/install.sh | bash -s -- MeinPasswort
+apt-get update && apt-get install -y curl && curl -fsSL https://raw.githubusercontent.com/Lu1sTV/tagesplaner/main/deploy/install.sh | bash -s -- MeinPasswort
 ```
+
+Das `apt-get install curl` davor ist nötig, weil die Debian-Templates kein `curl`
+mitbringen – und ohne `curl` lässt sich das Skript nicht herunterladen.
 
 `MeinPasswort` ist dein späterer Login in der App – such dir was aus. Lässt du es weg,
 generiert das Skript eines und zeigt es am Ende an.

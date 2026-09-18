@@ -1,5 +1,5 @@
 // Tests fuer reorder() aus order.ts – laufen mit: node src/place.test.mjs
-import { reorder } from './order.ts'
+import { ageInDays, reorder } from './order.ts'
 
 const place = (s, from, id, to, beforeId) => reorder(s, from, id, to, beforeId)
 
@@ -35,6 +35,17 @@ check('morgen danach', ids(crossEnd.tomorrow), 'Y')
 let dragged = s
 for (const before of ['C', 'D', null]) dragged = place(dragged, 'today', 'A', 'today', before)
 check('A schrittweise ganz nach unten', ids(dragged.today), 'BCDA')
+
+
+// --- Alters-Badge: ganze Kalendertage, nicht Stunden
+const montag8Uhr = new Date(2026, 8, 21, 8, 0)
+const age = (iso) => ageInDays(iso, montag8Uhr)
+check('heute angelegt -> 0 (kein Badge)', age(new Date(2026, 8, 21, 7, 30).toISOString()), 0)
+check('gestern 23:00 -> 1', age(new Date(2026, 8, 20, 23, 0).toISOString()), 1)
+check('vor einer Woche -> 7', age(new Date(2026, 8, 14, 12, 0).toISOString()), 7)
+check('vor 30 Tagen -> 30', age(new Date(2026, 7, 22, 12, 0).toISOString()), 30)
+check('ueber Sommerzeitwechsel (Ende Oktober)',
+  ageInDays(new Date(2026, 9, 24, 12, 0).toISOString(), new Date(2026, 9, 27, 8, 0)), 3)
 
 console.log(fails ? `\n${fails} Test(s) fehlgeschlagen` : '\nAlle Tests gruen')
 process.exit(fails ? 1 : 0)

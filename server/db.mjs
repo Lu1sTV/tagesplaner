@@ -45,9 +45,9 @@ export { getMeta, setMeta }
 
 const activeList = (db, list) =>
   db
-    .prepare('SELECT id, text, done FROM todos WHERE list = ? ORDER BY position, created_at')
+    .prepare('SELECT id, text, done, created_at FROM todos WHERE list = ? ORDER BY position, created_at')
     .all(list)
-    .map((r) => ({ id: r.id, text: r.text, done: !!r.done }))
+    .map((r) => ({ id: r.id, text: r.text, done: !!r.done, created: r.created_at }))
 
 /**
  * Tageswechsel: erledigte Todos von "Heute" wandern ins Archiv, offene bleiben
@@ -88,12 +88,13 @@ export function readState(db) {
 
 export function addTodo(db, list, text) {
   const id = randomUUID()
+  const created = new Date().toISOString()
   const next =
     (db.prepare('SELECT MAX(position) AS m FROM todos WHERE list = ?').get(list)?.m ?? -1) + 1
   db.prepare(
     'INSERT INTO todos (id, text, list, done, position, created_at) VALUES (?, ?, ?, 0, ?, ?)',
-  ).run(id, text, list, next, new Date().toISOString())
-  return { id, text, done: false }
+  ).run(id, text, list, next, created)
+  return { id, text, done: false, created }
 }
 
 export function setDone(db, id, done) {

@@ -68,6 +68,8 @@ try {
   check('heute nach Anlegen', texts(state.today), ['Einkaufen', 'Steuer'])
   check('morgen nach Anlegen', texts(state.tomorrow), ['Arzt'])
 
+  check('Anlegen liefert created zurueck', typeof a.created === 'string' && a.created.includes('T'), true)
+  check('created kommt auch im State mit', typeof state.today[0].created, 'string')
   check('leerer Text -> 400', (await call('POST', '/api/todos', { list: 'today', text: '  ' })).status, 400)
   check('unbekannte Liste -> 400', (await call('POST', '/api/todos', { list: 'gestern', text: 'x' })).status, 400)
 
